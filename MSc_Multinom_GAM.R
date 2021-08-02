@@ -199,9 +199,6 @@ bad_1s <- filter(ang_b1s, platform_bearing < block1S[1] & platform_bearing > blo
 #okay
 
 
-
-
-
 clean_dist2 <- byelau %>% 
   select(session_id, MDHM, Date, jul_day, Time, hour, dur_hr, treatment, species, 
          num_idv, obs, foraging, blockid, block, block_ns, platform_bearing, 
