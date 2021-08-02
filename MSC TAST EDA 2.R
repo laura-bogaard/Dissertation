@@ -11,7 +11,7 @@ library(nlme)
 library(mgcv)
 
 #set wd 
-setwd("~/Desktop/TASTBALLARD/TAST WD")
+setwd("~/Desktop/TASTBALLARD/TAST WD/Dissertation")
 #######################################################
 # load data and adjust data types
 #### distance refers to the dataset where each row is a surfacing
@@ -533,7 +533,7 @@ ggplot()+
 ################################################################################
 ## exploring angle errors by observer
 
-asila <- valid_bearings%>% filter(platform_distance <= 250)%>%filter(obs == "AB")
+asila <- valid_bearings%>% filter(tide_dist <= 250)%>%filter(obs == "AB")
 
 asila_plot <- ggplot()+
   geom_sf(data = polygon)+
@@ -541,7 +541,7 @@ asila_plot <- ggplot()+
   labs(title = "Asila")+ 
   theme(plot.title = element_text(size=10))
 
-amina <- valid_bearings%>% filter(platform_distance <= 250)%>%filter(obs == "AC")
+amina <- valid_bearings%>% filter(tide_dist <= 250)%>%filter(obs == "AC")
 
 amina_plot <- ggplot()+
   geom_sf(data = polygon)+
@@ -549,7 +549,7 @@ amina_plot <- ggplot()+
   labs(title = "Amina")+ 
   theme(plot.title = element_text(size=10))
 
-drea <- valid_bearings%>% filter(platform_distance <= 250)%>%filter(obs == "AMB")
+drea <- valid_bearings%>% filter(tide_dist <= 250)%>%filter(obs == "AMB")
 
 drea_plot <- ggplot()+
   geom_sf(data = polygon)+
@@ -557,7 +557,7 @@ drea_plot <- ggplot()+
   labs(title = "Andrea")+ 
   theme(plot.title = element_text(size=10))
 
-laura <- valid_bearings%>% filter(platform_distance <= 250)%>%filter(obs == "LB")
+laura <- valid_bearings%>% filter(tide_dist <= 250)%>%filter(obs == "LB")
 
 laura_plot <- ggplot() +
   geom_sf(data = polygon) +
@@ -607,7 +607,7 @@ ggplot()+
 
 # # add an RL column to massive distance data set
 # distance <-  distance %>%
-#   mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = platform_distance))))
+#   mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = tide_dist))))
 
 ####Once you have your data cleaned, there are two ways to go ahead.
 
@@ -682,25 +682,29 @@ final_data$key <- paste(final_data$session_id, final_data$id, sep = "_")
 valid_bearings2$key <- paste(valid_bearings2$session_id, valid_bearings2$id, sep = "_")
 
 # great now join with final any other spatial covar?
-final_data1 <- left_join(final_data, spatcovar, by = "id")
-final_data1 <- distinct(final_data1)
-head(final_data1)
-
-
-# add unique ID key **now back**
-final_data$key <- paste(final_data$session_id, final_data$id, sep = "_")
-valid_bearings2$key <- paste(valid_bearings2$session_id, valid_bearings2$id, sep = "_")
-
+final_data <- left_join(final_data, spatcovar, by = "id")
+final_data <- distinct(final_data)
+head(final_data)
 
 #convert back to df
 valid_bearings2 <- data.frame(valid_bearings2)
 names(valid_bearings2)
 names(final_data)
 
+#  make new df with session covariates
+sessioncovar <- valid_bearings2 %>%
+  select(session_id, jul_day, start_hr, dur_hr, treatment, obs, fish) %>% 
+  group_by(session_id) %>% 
+  filter(row_number() == 1)
+
+final_data <- left_join(final_data, sessioncovar, by = "session_id")
 
 # this gives me the df i want with spatial covar, but not all of the session covariates are available  
-mg1 <- merge(final_data, valid_bearings2, all.x = T, by = "key", suffix = "")
+mg1 <- merge(final_data, valid_bearings2, all.x = T, by = "key")#, suffix = "")
 
+tail(mg1)
+
+distinct(mg1)
 # now rename session id.x to session id, and drip session id y
 mg1$session_id <- mg1$session_id.x
 
