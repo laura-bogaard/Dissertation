@@ -16,7 +16,7 @@ library(plyr)
 library(lubridate)
 
 #set wd 
-setwd("~/Desktop/TASTBALLARD/TAST WD")
+setwd("~/Desktop/TASTBALLARD/TAST WD/Dissertation")
 
 # load data and adjust data types
 #### distance refers to the dataset where each row is a surfacing
@@ -56,7 +56,7 @@ distance$tide_dist_sq <- (distance$platform_dist)^2 - ((6.78 + distance$tide_ht)
 na.omit(distance$tide_dist_sq)
 
 #take sqrt and round boooooom!
-distance$tide_dist <- round(sqrt(distance$tide_dist_sq), 0)
+distance$tide_dist <- round(sqrt(abs(distance$tide_dist_sq)), 0)
 
 ###
 
@@ -68,7 +68,7 @@ distance <- unite(distance, col = "blockid", block:block_ns, sep = "", remove = 
 head(distance)
 
 # now filter for all distances less than truncated 250m
-distance <- distance%>% filter(platform_distance <= 250)
+distance <- distance%>% filter(tide_dist <= 250)
 head(distance)
 
 #check that we are now limited to just 1-3
@@ -126,42 +126,42 @@ distance <- distance %>%
 block1S <- c(0, 50)
 # check if any values fall outside distance range for this block
 b1s <- filter(distance, blockid == "1S") 
-bad1s <- filter(b1s, platform_distance < block1S[1] | platform_distance > block1S[2])
+bad1s <- filter(b1s, tide_dist < block1S[1] | tide_dist > block1S[2])
 #okay
 
 block1N <- c(33, 78)
 # check if any values fall outside distance range for this block
 b1n <- filter(distance, blockid == "1N") 
-bad1n <- filter(b1n, platform_distance < block1N[1] | platform_distance > block1N[2])
+bad1n <- filter(b1n, tide_dist < block1N[1] | tide_dist > block1N[2])
 #okay
 
 block2S <- c(37, 112)
 # check if any values fall outside distance range for this block
 b2s <- filter(distance, blockid == "2S") 
-bad2s <- filter(b2s, platform_distance < block2S[1] | platform_distance > block2S[2])
+bad2s <- filter(b2s, tide_dist < block2S[1] | tide_dist > block2S[2])
 #okay
 
 block2N <- c(51, 129)
 # check if any values fall outside distance range for this block
 b2n <- filter(distance, blockid == "2N") 
-bad2n <- filter(b2n, platform_distance < block2N[1] | platform_distance > block2N[2])
+bad2n <- filter(b2n, tide_dist < block2N[1] | tide_dist > block2N[2])
 #okay
 
 block3S <- c(108, 250)
 # check if any values fall outside distance range for this block
 b3s <- filter(distance, blockid == "3S") 
-bad3s <- filter(b3s, platform_distance < block3S[1] | platform_distance > block3S[2])
+bad3s <- filter(b3s, tide_dist < block3S[1] | tide_dist > block3S[2])
 #okay
 
 block3N <- c(112, 255)
 # check if any values fall outside distance range for this block
 b3n <- filter(distance, blockid == "3N") 
-bad3n <- filter(b3n, platform_distance < block3N[1] | platform_distance > block3N[2])
+bad3n <- filter(b3n, tide_dist < block3N[1] | tide_dist > block3N[2])
 #okay
 
 #bind them all together ** note that rbind h8s d8s :( **
 bad_dists <- rbind(bad1s, bad1n, bad2s, bad2n, bad3s, bad3n)
-nrow(bad_dists) # cool only drop 149 observations
+nrow(bad_dists) # cool only drop 159 observations
 
 #now drop them from D3
 distance <- anti_join(distance, bad_dists, by = "ID")
@@ -169,10 +169,9 @@ str(distance)
 # just a note that this took me 3 hours... but i learned things!!
 
 #final clean up to drop some lingering extra varaibles
-
 distance$hour <- distance$Hour.x
 
-# pull out all observations made from the gate
+# get rid of all observations made from the gate
 dist_no_gate <- filter(distance, observer_location != "Gate") 
 ## use this later with following 3 lines if we decide to drop all gate obs
 
@@ -180,12 +179,10 @@ dist_no_gate <- filter(distance, observer_location != "Gate")
 lb42 <- filter(distance, jul_day == 42) # this is the day
 LB42 <- filter(lb42, observer_location == "Gate") #this is where the bad bearings come from 
 byelau <- anti_join(distance, LB42, by = "MDHM") # drop em like its hot
-which(byelau, MDHM == "9_5_10_28") #& tide_dist == 220) #this one is defo an accident
-byelau <- filter(byelau, ID != 1095) #bye
+drop <- which(byelau$MDHM == "9_5_10_28" & byelau$tide_dist == 220) #this one is defo an accident
+byelau <- filter(byelau, ID != drop) #bye
 #another outlier
 ff <- which(byelau$x > 150 & byelau$y > 120) 
-
-byelau <- filter(byelau, ID != 1095) #bye
 
 
 clean_dist2 <- byelau %>% 
@@ -275,6 +272,8 @@ str(block_rl)
 clean_dist2 <-  left_join(block_rl, clean_dist2, by = "blockid")
 
 clean_dist <- clean_dist2
+
+write_csv(clean_dist, "~/Desktop/TASTBALLARD/TAST WD/Dissertation/cleandist.csv")
 
 ##### RUN TO HERE FIRST THIGNS FIRST! ###################
 
