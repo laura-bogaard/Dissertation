@@ -2,7 +2,6 @@ rm(list = ls())
 ## TAST MSC MULTINOMIAL GAM SCRIPT
 ## Laura Bogaard
 
-
 # Question: what is the prob of being in a block?
             # does this change accross treatment?
 # load libraries
@@ -117,7 +116,7 @@ min(distance$tide_ht)
 # rescue mission for distance data: 
 # figure out if any distances do not line up with blocks ⬇︎
 ################################################################################
-
+# add a row id 
 distance$ID <- seq.int(nrow(distance))
 #date and time giving grief drop them for now 
 distance <- distance %>%
@@ -183,6 +182,24 @@ drop <- which(byelau$MDHM == "9_5_10_28" & byelau$tide_dist == 220) #this one is
 byelau <- filter(byelau, ID != drop) #bye
 #another outlier
 ff <- which(byelau$x > 150 & byelau$y > 120) 
+
+###### now clean bearings using Katie's ballard measurements
+## TODO validate these with protractor
+
+ang_1s <- c(315, 15)
+# check if any values fall outside distance range for this block
+ang_b1s <- filter(distance, blockid == "1S") 
+bad_1s <- filter(ang_b1s, platform_bearing < block1S[1] & platform_bearing > block1S[2])
+#okay none 
+
+ang_1n <- c(180, 110)
+# check if any values fall outside distance range for this block
+ang_b1s <- filter(distance, blockid == "1S") 
+bad_1s <- filter(ang_b1s, platform_bearing < block1S[1] & platform_bearing > block1S[2])
+#okay
+
+
+
 
 
 clean_dist2 <- byelau %>% 
@@ -257,22 +274,27 @@ RL_plot <- ggplot(data = RL) +
 
 # now calculate distance to the centre of each block
 blockid <- c("1S", "1N", "2S", "2N", "3S", "3N")
-dist2mid <- c(mean(block1S), mean(block1N), mean(block2S), mean(block2N), mean(block3S), mean(block3N))
+dist2midblk <- c(mean(block1S), mean(block1N), mean(block2S), mean(block2N), mean(block3S), mean(block3N))
 #model theorhetical and empirical TL for centre distance of each block
-rlmid_emp <- c(predict(rlmod, newdata = data.frame(rldist = dist2mid)))
-rlmid_the <- as.numeric(181 - (20*log10(dist2mid)))
+rl_blk_mid_emp <- c(predict(rlmod, newdata = data.frame(rldist = dist2midblk)))
+rl_blk_mid_the <- as.numeric(182 - (20*log10(dist2midblk)))
 
 block_rl <- data.frame(blockid = blockid, 
-                       dist2mid = as.numeric(dist2mid),
-                       rlmid_emp = as.numeric(rlmid_emp), 
-                       rlmid_the = as.numeric(rlmid_the))
+                       dist2midblk = as.numeric(dist2midblk),
+                       rl_blk_mid_emp = as.numeric(rlmid_emp), 
+                       rl_blk_mid_the = as.numeric(rlmid_the))
 str(block_rl)
 
 # join the mean blockrl to distance
 clean_dist2 <-  left_join(block_rl, clean_dist2, by = "blockid")
 
-clean_dist <- clean_dist2
+# do the same for every tide corrected distance
+tide_dist_df <- data.frame(clean_dist2$tide_dist)
+clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response")
+#####ask fe for help
 
+clean_dist <- clean_dist2
+View(clean_dist)
 write_csv(clean_dist, "~/Desktop/TASTBALLARD/TAST WD/Dissertation/cleandist.csv")
 
 ##### RUN TO HERE FIRST THIGNS FIRST! ###################
