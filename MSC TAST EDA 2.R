@@ -266,7 +266,7 @@ fish %>%
 
 ###################################### 
 # WRANGLE DATA INTO PRESENCE ABSENCE
-
+###################################### 
 # get counts of surfacings within 10m by 10m bins for each session
 library(dplyr)
 grid_counts <- valid_bearings %>%  
@@ -437,7 +437,7 @@ valid_bearings <-  filter(clean_dist2, jul_day > 39)
 valid_bearings$x <- as.numeric(valid_bearings$x)
 valid_bearings$y <- as.numeric(valid_bearings$y)
 
-# make sure df is in ascending order by datetime
+# make sure df is in ascending order by datetime so 1st index matches refcoord
 valid_bearings$datetime <- as_datetime(paste(valid_bearings$Date, valid_bearings$Time, sep = " "))
 valid_bearings <- arrange(valid_bearings, datetime)
 
@@ -594,18 +594,20 @@ gr2 <- gr2[st_area(gr2)>1,] %>% st_as_sf() #### Ask steve about this
 ###Some of the grids are not exactly sqaures at the point. Use centroids of the shapes as the centres for grid values
 centres <- st_centroid(gr2)
 
-### calculate spatial covariates
+### calculate spatial covariates 
 gr2 <- gr2 %>% 
   mutate(distance = as.numeric(st_distance(centres,st_point(x = c(0,0))))) %>% 
   mutate(RL_theoretical = as.numeric(182 - (20*log10(distance)))) %>% 
   mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = distance))))
 
+# plot emperical RL over study area
 ggplot()+
-  geom_sf(data = gr2,aes(fill = RL_emperical))
+  geom_sf(data = gr2,aes(fill = RL_emperical))+
+  theme_classic()
 
-# add an RL column to massive distance data set
-distance <-  distance %>%
-  mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = platform_distance))))
+# # add an RL column to massive distance data set
+# distance <-  distance %>%
+#   mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = platform_distance))))
 
 ####Once you have your data cleaned, there are two ways to go ahead.
 
@@ -622,7 +624,9 @@ valid_bearings1 <- valid_bearings %>% mutate(gridx = ((x+5)%/%10)*10,
 # dataframe just to retain the original, you might not need to once you check it 
 # and this seems ok
 
+
 valid_bearings2 <- valid_bearings
+
 
 valid_bearings2 %>% mutate(x = jitter(x,.0001),y = jitter(y,.0001))
 
@@ -662,15 +666,31 @@ final_data$pa <- ifelse(final_data$counts > 0,1,0)
 # Back to Laura's Code
 ### Now you have session id to match session/temporal covariates and grid id to match spatial covariates, 
 
+#create spattial covar df
+spatcovar <- gr2
+spatcovar <- as.data.frame(st_set_geometry(spatcovar, "geometry"))
+spatcovar <- select(spatcovar, -geometry)
+#rename some columns
+spatcovar$dist2sq <- spatcovar$distance
+spatcovar$rl_the_sq <-  spatcovar$RL_theoretical
+spatcovar$rl_emp_sq <- spatcovar$RL_emperical
+spatcovar <- select(spatcovar, -distance, -RL_theoretical, -RL_emperical)
+class(spatcovar)
+
+# add unique ID key to tie together session id and id
+final_data$key <- paste(final_data$session_id, final_data$id, sep = "_")
+valid_bearings2$key <- paste(valid_bearings2$session_id, valid_bearings2$id, sep = "_")
+
+# great now join with final any other spatial covar?
+final_data1 <- left_join(final_data, spatcovar, by = "id")
+final_data1 <- distinct(final_data1)
+head(final_data1)
+
+
 # add unique ID key **now back**
 final_data$key <- paste(final_data$session_id, final_data$id, sep = "_")
 valid_bearings2$key <- paste(valid_bearings2$session_id, valid_bearings2$id, sep = "_")
 
-# grab spatial covar from gr2
-spatcovar <- data.frame(gr2)
-spatcovar
-
-unique(spatcovar)
 
 #convert back to df
 valid_bearings2 <- data.frame(valid_bearings2)
