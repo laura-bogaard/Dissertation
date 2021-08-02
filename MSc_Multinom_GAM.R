@@ -88,7 +88,7 @@ distance$date <- as.Date(distance$date,"%m/%d/%y")
 
 #get julian day and survey effort onto distance data
 distance<- pred %>%
-  select(session_id, dur_hr, Julian_day_from_start) %>%
+  select(session_id, dur_hr, Julian_day_from_start, Start_Time) %>%
   left_join(distance, pred, by = "session_id")
 
 # remove pilot surveys
@@ -100,6 +100,16 @@ distance$jul_day <- distance$Julian_day_from_start - 18
 #fix fish_day
 distance$fish <- distance$fish_day
 
+#fix hour aka session start 
+
+#make time fornat
+distance$Start_Time <- parse_time(distance$Start_Time, format = "%T")
+#seperate into hourminute second
+distance$Start_Time <- as.character(distance$Start_Time)
+distance %>%
+  separate(Start_Time, c("hour", "minute","second"),sep = ":", remove = F)
+distance$start_hr <- distance$hour
+
 #turn block id into numeric factor dummy variables for multinom model
 distance$block_fac <- as.numeric(mapvalues(distance$blockid, warn_missing = T, 
                                             from = c("1S", "1N", "2S", "2N", "3S", "3N"), 
@@ -109,9 +119,6 @@ na.omit(distance$block_fac)
 
 # should i just seals, kick out sea lions? 
 which(distance$species == "SL") #127 observations with SL--keep or toss??
-
-max(distance$tide_ht)
-min(distance$tide_ht)
 
 # rescue mission for distance data: 
 # figure out if any distances do not line up with blocks ⬇︎
@@ -168,7 +175,7 @@ str(distance)
 # just a note that this took me 3 hours... but i learned things!!
 
 #final clean up to drop some lingering extra varaibles
-distance$hour <- distance$Hour.x
+distance$obs_hour <- distance$Hour.x
 
 # get rid of all observations made from the gate
 dist_no_gate <- filter(distance, observer_location != "Gate") 
@@ -200,9 +207,9 @@ bad_1s <- filter(ang_b1s, platform_bearing < block1S[1] & platform_bearing > blo
 
 
 clean_dist2 <- byelau %>% 
-  select(session_id, MDHM, Date, jul_day, Time, hour, dur_hr, treatment, species, 
-         num_idv, obs, foraging, blockid, block, block_ns, platform_bearing, 
-         platform_distance, tide_dist, tide_ht, fish, block_fac, x, y)
+  select(session_id, MDHM, Date, jul_day, Time, start_hr, obs_hour, dur_hr, 
+         treatment, species, num_idv, obs, foraging, blockid, block, block_ns, 
+         platform_bearing, tide_dist, tide_ht, fish, block_fac, x, y)
 
 ##### now rescue mission for bearings if this was the issue all along... i will freaking scream
 clean_dist2$platform_bearing <- clean_dist2$platform_bearing + 20
@@ -220,7 +227,7 @@ which(clean_dist2$platform_bearing >=360)
 theta1 <- (clean_dist2$platform_bearing * (pi/180))
 
 # next convert polar to cartesian
-xy_coord <- tibble(pol2cart(clean_dist2$platform_distance, theta1, degrees = F))
+xy_coord <- tibble(pol2cart(clean_dist2$tide_dist, theta1, degrees = F))
 
 
 # plot to check
@@ -257,7 +264,7 @@ rlmod$coefficients
 summary(rlmod)$adj.r.squared
 
 #add theo and emperical to RL
-RL$RL_theoretical <- (181 - (20*log10(rldist)))
+RL$RL_theoretical <- (182 - (20*log10(rldist)))
 RL$RL_emperical <- c(predict(rlmod, newdata = data.frame(rldist = rldist)))
 
 # now do this in gg plot
@@ -278,8 +285,8 @@ rl_blk_mid_the <- as.numeric(182 - (20*log10(dist2midblk)))
 
 block_rl <- data.frame(blockid = blockid, 
                        dist2midblk = as.numeric(dist2midblk),
-                       rl_blk_mid_emp = as.numeric(rlmid_emp), 
-                       rl_blk_mid_the = as.numeric(rlmid_the))
+                       rl_blk_mid_emp = as.numeric(rl_blk_mid_emp), 
+                       rl_blk_mid_the = as.numeric(rl_blk_mid_the))
 str(block_rl)
 
 # join the mean blockrl to distance
@@ -287,9 +294,9 @@ clean_dist2 <-  left_join(block_rl, clean_dist2, by = "blockid")
 
 # do the same for every tide corrected distance
 tide_dist_df <- data.frame(clean_dist2$tide_dist)
-clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response")
-#####ask fe for help
+clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response") #em[erical]
 
+#done. write csv
 clean_dist <- clean_dist2
 View(clean_dist)
 write_csv(clean_dist, "~/Desktop/TASTBALLARD/TAST WD/Dissertation/cleandist.csv")
