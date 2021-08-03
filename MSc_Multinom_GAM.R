@@ -294,7 +294,7 @@ clean_dist2 <-  left_join(block_rl, clean_dist2, by = "blockid")
 
 # do the same for every tide corrected distance
 tide_dist_df <- data.frame(clean_dist2$tide_dist)
-clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response") #em[erical]
+clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response") #emperical
 
 #done. write csv
 clean_dist <- clean_dist2
