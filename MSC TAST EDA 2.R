@@ -699,6 +699,11 @@ sessioncovar <- valid_bearings2 %>%
 
 final_data <- left_join(final_data, sessioncovar, by = "session_id")
 
+#seperate id into x, y
+
+final_data <- final_data %>% separate(id, sep = ",", c("x", "y"), remove = F)
+
 # write csv 
 write.csv(final_data, "~/Desktop/TASTBALLARD/TAST WD/Dissertation/pa_data.csv") 
+
 
