@@ -107,7 +107,7 @@ salsa <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
 bestModel1D <- salsa$bestModel
 
 # Select initial knot locations using a space-filling design
-knotGrid <- MRSea::getKnotgrid(coordData=cbind(df$Xpos, df$Ypos),
+knotGrid <- MRSea::getKnotgrid(coordData=cbind(df$x.pos, df$x.pos),
                                numKnots=300, plot=FALSE)
 
 # Create distance matrix
@@ -118,8 +118,61 @@ distMatrix <- MRSea::makeDists(datacoords=cbind(df$x.pos, df$y.pos),
 salsa2DList <- list(fitnessMeasure="AIC", knotgrid=knotGrid,
                     startKnots=6, minKnots=2, maxKnots=20,
                     gap=0)
+#
+set.seed(53195)
 # Run SALSA 2D
 salsa2D <- MRSea::runSALSA2D(bestModel1D, salsa2DList, d2k=distMatrix$dataDist,
                              k2k=distMatrix$knotDist, splineParams=NULL,
                              tol=0, chooserad=F, panels=NULL,
                              suppress.printout=TRUE)
+
+# Store "best" model
+bestModel2D <- salsa2D$bestModel
+# Summary of results
+summary(bestModel2D)
+
+# Make partial plots?? not sure if this is useful for binary response
+#MRSea::runPartialPlots(bestModel2D, varlist.in=" ",
+                       #showKnots=TRUE, type="link", data=df)
+
+## Map model for On and Off
+par(mfrow=c(1,2))
+# Loop across all phases
+for (treat in c("ON", "OFF"))
+{
+  bWant <- df$treat %in% treat # a boolean specifying phase
+  fields::quilt.plot(df$XPos[bWant],
+                     df$YPos[bWant],
+                     fitted(bestModel2D)[bWant],
+                     
+                     nrow=10, ncol=10,
+                     zlim=range(fitted(bestModel2D)),
+                     main=paste0("TAST ", treat))
+  if (treat %in% "ON")
+  {
+    #remove legend
+    lines(foot1$XPos, foot1$YPos, lwd=2)
+  }
+
+}
+?quilt.plot
+
+# legend things?
+par(oma=c( 0,0,0,4)) # margin of 4 spaces width at right hand side
+set.panel( 1,2) # 2X2 matrix of plots
+
+# now draw all your plots using usual image command
+for (  k in 1:4){
+  data<- matrix( rnorm(150), 10,15)
+  image( data, zlim=c(-4,4), col=tim.colors())
+  # and just for fun add a contour plot  
+  contour( data, add=TRUE)
+}
+
+par(oma=c( 0,0,0,1))# reset margin to be much smaller.
+image.plot( legend.only=TRUE, zlim=c(-4,4)) 
+
+# image.plot tricked into  plotting in margin of old setting 
+
+set.panel() # reset plotting device
+
