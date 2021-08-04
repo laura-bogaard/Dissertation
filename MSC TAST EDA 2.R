@@ -432,6 +432,7 @@ PA1 <- distinct(PA1, unique_id, .keep_all = TRUE)
 ################################################################################
 
 #filter clean distance data for only days after 02 sep or jul day 39
+clean_dist2 <- read.csv("cleandist.csv") 
 valid_bearings <-  filter(clean_dist2, jul_day > 39)
 
 valid_bearings$x <- as.numeric(valid_bearings$x)
@@ -606,10 +607,12 @@ gr2 <- gr2 %>%
   mutate(RL_theoretical = as.numeric(182 - (20*log10(distance)))) %>% 
   mutate(RL_emperical = c(predict(rlmod, newdata = data.frame(rldist = distance))))
 
-# plot emperical RL over study area
-ggplot()+
+# plot emperical RL over study area 
+RLPLOT <- ggplot()+
   geom_sf(data = gr2,aes(fill = RL_emperical))+
-  theme_classic()
+  theme_classic() 
+
+RLPLOT
 
 # # add an RL column to massive distance data set
 # distance <-  distance %>%
