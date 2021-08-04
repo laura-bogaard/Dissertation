@@ -525,10 +525,16 @@ valid_bearings$y <- as.numeric(valid_bearings$y)
 
 ### TODO: most points line up. clean up last of weird points when Katie get the angles to me 
 # plot of final points layout 
-ggplot()+
+new <- ggplot()+
   geom_sf(data = polygon)+
-  geom_point(data = valid_bearings, aes(x = x, y = y, color = blockid))
- # geom_text(data = valid_bearings, aes(x = x, y = y, label = jul_day))
+  geom_point(data = valid_bearings, aes(x = x, y = y, color = blockid))+
+  geom_text(data = valid_bearings, position=position_jitter(width=5,height=5), aes(x = x, y = y, label = ID))
+new
+old <- ggplot()+
+  geom_sf(data = polygon)+
+  geom_point(data = valid_bearings, aes(x = x, y = y, color = blockid))+
+  geom_text(data = valid_bearings, position=position_jitter(width=5,height=5), aes(x = x, y = y, label = ID))
+old
 
 ################################################################################
 ## exploring angle errors by observer

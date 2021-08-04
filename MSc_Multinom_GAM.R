@@ -1,5 +1,5 @@
-rm(list = ls())
-## TAST MSC MULTINOMIAL GAM SCRIPT
+rm(list = ls()) 
+## TAST MSC EDA3 script
 ## Laura Bogaard
 
 # Question: what is the prob of being in a block?
@@ -21,11 +21,12 @@ setwd("~/Desktop/TASTBALLARD/TAST WD/Dissertation")
 #### distance refers to the dataset where each row is a surfacing
 distance <- read.csv("Ballard_distance+fishcts.csv", header = T)
 head(distance)
+
 #### pred refers to the dataset where each row is a surveying session
 pred <- read.csv("Ballard_Predation.csv")
 head(pred)
 
-### missing a key piece of the puzzle here: TIDE HEIGHT AFFECTS DISTANCE
+### tide refers to the dataset where each row is a tide height measurement 
 tide <- read.csv("tides_ballard.csv", header = T)
 head(tide)
 str(tide)
@@ -56,8 +57,6 @@ na.omit(distance$tide_dist_sq)
 
 #take sqrt and round boooooom!
 distance$tide_dist <- round(sqrt(abs(distance$tide_dist_sq)), 0)
-
-###
 
 # rename sesh id so there is a key variable between distance and pred
 pred$session_id <- pred$Session_ID
@@ -106,9 +105,9 @@ distance$fish <- distance$fish_day
 distance$Start_Time <- parse_time(distance$Start_Time, format = "%T")
 #seperate into hourminute second
 distance$Start_Time <- as.character(distance$Start_Time)
-distance %>%
+distance <- distance %>%
   separate(Start_Time, c("hour", "minute","second"),sep = ":", remove = F)
-distance$start_hr <- distance$hour
+distance$start_hr <- as.numeric(distance$hour)
 
 #turn block id into numeric factor dummy variables for multinom model
 distance$block_fac <- as.numeric(mapvalues(distance$blockid, warn_missing = T, 
@@ -117,8 +116,10 @@ distance$block_fac <- as.numeric(mapvalues(distance$blockid, warn_missing = T,
 # get rid of any rows with NA
 na.omit(distance$block_fac)
 
-# should i just seals, kick out sea lions? 
-which(distance$species == "SL") #127 observations with SL--keep or toss??
+# kick out all sea lion observations
+distance_wsl <- distance # heres the full df
+distance <- distance %>%
+  filter(species != "SL") #127 observations with SL gone
 
 # rescue mission for distance data: 
 # figure out if any distances do not line up with blocks ⬇︎
@@ -184,15 +185,24 @@ dist_no_gate <- filter(distance, observer_location != "Gate")
 # or just those from day 42 that looked wrong on the map
 lb42 <- filter(distance, jul_day == 42) # this is the day
 LB42 <- filter(lb42, observer_location == "Gate") #this is where the bad bearings come from 
-byelau <- anti_join(distance, LB42, by = "MDHM") # drop em like its hot
-drop <- which(byelau$MDHM == "9_5_10_28" & byelau$tide_dist == 220) #this one is defo an accident
-byelau <- filter(byelau, ID != drop) #bye
-#another outlier
-ff <- which(byelau$x > 150 & byelau$y > 120) 
+distance <- anti_join(distance, LB42, by = "MDHM") # drop em like its hot
 
-###### now clean bearings using Katie's ballard measurements
+#pts outside survey area
+pts_out <- c(1037, 910, 885, 895, 892, 876, 1103, 871, 868, 1436, 1481, 1296)
+#s points in N
+s_ptsin_n <- c(925, 1197, 883)
+#n pts in s
+n_ptsin_s <- c(1446, 1447, 914, 922, 920, 1480, 1482, 1465)
+
+# remove these rows
+gg <- c(pts_out, s_ptsin_n, n_ptsin_s)
+distance <- distance [! distance$ID %in% gg,]
+
+
+  
+############## now clean bearings using Katie's ballard measurements
 ## TODO validate these with protractor
-
+##############
 ang_1s <- c(315, 15)
 # check if any values fall outside distance range for this block
 ang_b1s <- filter(distance, blockid == "1S") 
@@ -205,9 +215,10 @@ ang_b1s <- filter(distance, blockid == "1S")
 bad_1s <- filter(ang_b1s, platform_bearing < block1S[1] & platform_bearing > block1S[2])
 #okay
 
+#########
 
-clean_dist2 <- byelau %>% 
-  select(session_id, MDHM, Date, jul_day, Time, start_hr, obs_hour, dur_hr, 
+clean_dist2 <- distance %>% 
+  select(session_id, MDHM, Date, jul_day, Time, start_hr, obs_hour, dur_hr, ID,
          treatment, species, num_idv, obs, foraging, blockid, block, block_ns, 
          platform_bearing, tide_dist, tide_ht, fish, block_fac, x, y)
 
@@ -293,12 +304,13 @@ str(block_rl)
 clean_dist2 <-  left_join(block_rl, clean_dist2, by = "blockid")
 
 # do the same for every tide corrected distance
-tide_dist_df <- data.frame(clean_dist2$tide_dist)
-clean_dist2$idv_rl <- predict(rlmod, newdata = tide_dist_df, type = "response") #emperical
+tide_dist_df <- data.frame(rldist = clean_dist2$tide_dist)
+
+clean_dist2$idv_rl <- predict(rlmod, newdata =  tide_dist_df, type = "response")  #emperical
 
 #done. write csv
 clean_dist <- clean_dist2
-View(clean_dist)
+
 write_csv(clean_dist, "~/Desktop/TASTBALLARD/TAST WD/Dissertation/cleandist.csv")
 
 ##### RUN TO HERE FIRST THIGNS FIRST! ###################
