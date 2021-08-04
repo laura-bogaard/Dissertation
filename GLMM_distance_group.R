@@ -19,7 +19,7 @@ ss<-dat$SS
 
 require(ggplot2)
 ##30min time bins, it seems that the column has been removed from the data sheet
-pl2<-(aggregate.data.frame(dist,list(trial,treat,TB,ss,site,trial),FUN=(mean),data=dat))
+pl2<-(aggregate.data.frame(dist, list(trial,treat,TB,ss,site,trial), FUN=(mean), data=dat))
 datq<-pl2
 ggplot(datq,aes(y=pl2$x,x=pl2$Group.3,fill=pl2$Group.2))+geom_boxplot(width=0.6)+xlab("Time (15mins)")+ylab("distance (m)")
 
@@ -40,6 +40,7 @@ m1<-glmmTMB(dist~treat*time+ar1(time+0|trial)+(1|ss)+(1|site)+(1|trial),ziformul
 m2<-glmmTMB(dist~treat*time+ar1(time+0|trial)+(1|ss)+(1|site)+(1|trial),ziformula=~0,family=nbinom1)
 m3<-glmmTMB(dist~treat*time+ar1(time+0|trial)+(1|ss)+(1|site)+(1|trial),ziformula=~0,family=nbinom2)#best
 AIC(m1,m2,m3)
+
 
 #### Step 2:select optimalcomination of fixed effects on the fully populated model
 #NA ....because fixed effects are given by theoretical considerations, i.e showing time bin by treatment  
@@ -80,7 +81,7 @@ plot(site,res)#residuals by random effect
 hist(res,breaks=c(30))#histogram of resisuals, looks ok(ish)
 #qq plot for random effects
 #histogram & qqnorm plots of residuals
-qqnorm(res)
+qqnorm(res) 
 qqline(res)# ok
 
 ### Model diagnostics using Dhaarma
