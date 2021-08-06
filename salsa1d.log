@@ -1,381 +1,78 @@
 [1] "Initialising..."
-Initial fit =  3308 141.8 
+Initial fit =  3510.441 1 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3308
+[1] 3510.441
 [1] 0
-[1]   2.973 251.788
+[1]  -5 165
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
-[1] 12990
-[1] 181
+[1] 12061
+[1] 16
+[1] "Maximum residual found..."
+[1] "Moving knot..."
+[1] "Knot moved..."
+[1] "Exchanging done..."
+[1] 33
+[1] 33
+[1] "Improving..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Improving complete..."
+[1] 33
+[1] 33
+[1] "And we're done..."
+[1] "Initialising..."
+Initial fit =  3520.332 1 
+[1] "initialisation complete..."
+[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+[1] 3520.332
+[1] 0
+[1] -35 225
+[1] "Exchanging..."
+[1] "Locating maximum residual......"
+[1] 12589
+[1] 23
+[1] "Maximum residual found..."
+[1] "Moving knot..."
+[1] "Knot moved..."
+[1] "Exchanging done..."
+[1] 51
+[1] 51
+[1] "Improving..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Improving complete..."
+[1] 51
+[1] 51
+[1] "And we're done..."
+[1] "Initialising..."
+Initial fit =  3520.332 195 
+[1] "initialisation complete..."
+[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+[1] 3520.332
+[1] 0
+[1]   65 1153
+[1] "Exchanging..."
+[1] "Locating maximum residual......"
+[1] 12589
+[1] 6
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
 [1] "Locating maximum residual......"
-[1] 206
-[1] 18
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 855
+[1] 12061
 [1] 1
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
 [1] "Locating maximum residual......"
-[1] 10657
-[1] 134
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 185
-[1] 185
-[1] "^^^^^^^^^^^Exchange^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 185
-[1] 185
-[1] "Dropping..."
-[1] "Dropped..."
-[1] "^^^^^^^^^^^Drop^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 186
-[1] 186
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 10657
-[1] 134
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 186
-[1] 186
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 186
-[1] 186
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 186
-[1] 186
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 206
-[1] 17
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 186
-[1] 186
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] 186
-[1] 186
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 186
-[1] 186
-[1] "And we're done..."
-[1] "Initialising..."
-Initial fit =  3292 1 
-[1] "initialisation complete..."
-[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3292
-[1] 0
-[1]  -5 165
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 206
-[1] 4
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 10657
-[1] 10
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 262
+[1] 12048
 [1] 5
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 206
-[1] 5
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 32
-[1] 32
-[1] "^^^^^^^^^^^Exchange^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 32
-[1] 32
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 32
-[1] 32
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 206
-[1] 5
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 32
-[1] 32
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] 32
-[1] 32
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 32
-[1] 32
-[1] "And we're done..."
-[1] "Initialising..."
-Initial fit =  3291 1 
-[1] "initialisation complete..."
-[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3291
-[1] 0
-[1] -35 225
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 10657
-[1] 20
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 23
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 50
-[1] 50
-[1] "^^^^^^^^^^^Exchange^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 50
-[1] 50
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 50
-[1] 50
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 23
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 50
-[1] 50
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] 50
-[1] 50
-[1] "Dropping..."
-[1] "Dropped..."
-[1] 50
-[1] 50
-[1] "And we're done..."
-[1] "Initialising..."
-Initial fit =  3291 126.8 
-[1] "initialisation complete..."
-[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3291
-[1] 0
-[1] 120.8 168.3
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 8
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 188
-[1] 188
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 188
-[1] 188
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 8
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Exchanging done..."
-[1] 188
-[1] 188
-[1] "Improving..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Improving complete..."
-[1] 188
-[1] 188
-[1] "And we're done..."
-[1] "Initialising..."
-Initial fit =  3281 195 
-[1] "initialisation complete..."
-[1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3281
-[1] 0
-[1]   65 1153
-[1] "Exchanging..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 6
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 10079
-[1] 4
-[1] "Maximum residual found..."
-[1] "Moving knot..."
-[1] "Knot moved..."
-[1] "Locating maximum residual......"
-[1] 12990
-[1] 4
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
@@ -390,20 +87,9 @@ Initial fit =  3281 195
 [1] "Down done..."
 [1] "Shifting up..."
 [1] "Up done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
-[1] "Shifting down..."
-[1] "Down done..."
-[1] "Shifting up..."
-[1] "Up done..."
 [1] "Shifting down..."
 [1] "Down done..."
 [1] "Improving complete..."
-[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 [1] 5
 [1] 5
 [1] "Dropping..."
@@ -412,7 +98,7 @@ Initial fit =  3281 195
 [1] 5
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
-[1] 10079
+[1] 12048
 [1] 5
 [1] "Maximum residual found..."
 [1] "Moving knot..."
@@ -438,16 +124,16 @@ Initial fit =  3281 195
 [1] 5
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3267 43 
+Initial fit =  3506.913 43 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3267
+[1] 3506.913
 [1] 0
 [1] 40 48
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
-[1] 10079
-[1] 4
+[1] 12589
+[1] 6
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
@@ -464,28 +150,40 @@ Initial fit =  3267 43
 [1] 6
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3267 12 
+Initial fit =  3506.913 12 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3267
+[1] 3506.913
 [1] 0
 [1]  9 16
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
-[1] 10079
+[1] 12061
+[1] 3
+[1] "Maximum residual found..."
+[1] "Moving knot..."
+[1] "Knot moved..."
+[1] "Locating maximum residual......"
+[1] 12589
 [1] 2
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
 [1] "Locating maximum residual......"
-[1] 855
+[1] 12048
+[1] 3
+[1] "Maximum residual found..."
+[1] "Moving knot..."
+[1] "Knot moved..."
+[1] "Locating maximum residual......"
+[1] 10657
 [1] 2
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
 [1] "Exchanging done..."
-[1] 4
-[1] 4
+[1] 3
+[1] 3
 [1] "^^^^^^^^^^^Exchange^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 [1] "Improving..."
 [1] "Shifting up..."
@@ -496,23 +194,46 @@ Initial fit =  3267 12
 [1] "Up done..."
 [1] "Shifting down..."
 [1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
 [1] "Improving complete..."
-[1] 4
-[1] 4
+[1] "^^^^^^^^^^^Improve^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+[1] 3
+[1] 3
 [1] "Dropping..."
 [1] "Dropped..."
-[1] 4
-[1] 4
+[1] 3
+[1] 3
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
-[1] 855
-[1] 2
+[1] 12589
+[1] 1
 [1] "Maximum residual found..."
 [1] "Moving knot..."
 [1] "Knot moved..."
 [1] "Exchanging done..."
-[1] 4
-[1] 4
+[1] 3
+[1] 3
 [1] "Improving..."
 [1] "Shifting up..."
 [1] "Up done..."
@@ -522,11 +243,15 @@ Initial fit =  3267 12
 [1] "Up done..."
 [1] "Shifting down..."
 [1] "Down done..."
+[1] "Shifting up..."
+[1] "Up done..."
+[1] "Shifting down..."
+[1] "Down done..."
 [1] "Improving complete..."
-[1] 4
-[1] 4
+[1] 3
+[1] 3
 [1] "Dropping..."
 [1] "Dropped..."
-[1] 4
-[1] 4
+[1] 3
+[1] 3
 [1] "And we're done..."
