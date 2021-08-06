@@ -1,10 +1,10 @@
 [1] "Initialising..."
-Initial fit =  3308.318 141.8006 
+Initial fit =  3308 141.8 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3308.318
+[1] 3308
 [1] 0
-[1]   2.972554 251.787776
+[1]   2.973 251.788
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
 [1] 12990
@@ -133,10 +133,10 @@ Initial fit =  3308.318 141.8006
 [1] 186
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3292.04 1 
+Initial fit =  3292 1 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3292.04
+[1] 3292
 [1] 0
 [1]  -5 165
 [1] "Exchanging..."
@@ -231,10 +231,10 @@ Initial fit =  3292.04 1
 [1] 32
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3290.723 1 
+Initial fit =  3291 1 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3290.723
+[1] 3291
 [1] 0
 [1] -35 225
 [1] "Exchanging..."
@@ -307,12 +307,12 @@ Initial fit =  3290.723 1
 [1] 50
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3290.578 126.8472 
+Initial fit =  3291 126.8 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3290.578
+[1] 3291
 [1] 0
-[1] 120.8288 168.3471
+[1] 120.8 168.3
 [1] "Exchanging..."
 [1] "Locating maximum residual......"
 [1] 12990
@@ -354,10 +354,10 @@ Initial fit =  3290.578 126.8472
 [1] 188
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3281.375 195 
+Initial fit =  3281 195 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3281.375
+[1] 3281
 [1] 0
 [1]   65 1153
 [1] "Exchanging..."
@@ -438,10 +438,10 @@ Initial fit =  3281.375 195
 [1] 5
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3267.419 43 
+Initial fit =  3267 43 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3267.419
+[1] 3267
 [1] 0
 [1] 40 48
 [1] "Exchanging..."
@@ -464,10 +464,10 @@ Initial fit =  3267.419 43
 [1] 6
 [1] "And we're done..."
 [1] "Initialising..."
-Initial fit =  3267.419 12 
+Initial fit =  3267 12 
 [1] "initialisation complete..."
 [1] "^^^^^^^^^^^Initial^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-[1] 3267.419
+[1] 3267
 [1] 0
 [1]  9 16
 [1] "Exchanging..."
