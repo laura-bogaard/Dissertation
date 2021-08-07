@@ -51,6 +51,45 @@ vif(m1) #  better
 m2<- gam(pa ~ treatment + s(x.pos, y.pos) + fish + obs + jul_day + start_hr, data = df, family = binomial)
 summary(m2)
 
+### try TPS models with and without interactions
+library(mgcv)
+TPS <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+                   s(start_hr, k= 2) + s(jul_day, k= 2) + treat + obs,
+                 family=binomial, data=df)
+summary(TPS)
+gam.check(TPS)
+
+library(mgcv)
+TPS <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+                   s(start_hr, k= 2) + s(jul_day, k= 2) + treat + obs,
+                 family=binomial, data=df)
+summary(TPS)
+gam.check(TPS)
+# drop hr cause its linear
+TPS2 <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+                   s(start_hr) + s(jul_day, k= 2) + treat + obs,
+                 family=binomial, data=df)
+summary(TPS2)
+gam.check(TPS2)
+
+# did not 
+
+
+
+TPSInt <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos, by = treat) +
+                      s(start_hr, k= 2) + s(jul_day, k= 2) + treat +obs,
+                    family= binomial, data=df)
+gam.check(TPSInt)
+
+summary(TPSInt)
+
+
+AIC(TPS, TPS2, TPSInt)
+
+
+
+
+
 ## STEP 3: check for correlated residuals in temporal covariates
 runs.test(residuals(m2, type = "pearson", alternative = "two-sided")) 
 
@@ -60,7 +99,7 @@ plotRunsProfile(m2, varlist = c("x.pos", "y.pos", "jul_day", "start_hr"))
 # ACF plot with blocks as survey sesh + gr id
 df$blockid <- as.factor(paste(df$block_as_session, df$id,sep = ""))
 #WARNING THIS RUNS FOREVER
-runACF(df$blockid, m2, store = F) #very strange output just gives straight red line 
+# runACF(df$blockid, m2, store = F) #very strange output just gives straight red line 
 
 #Try grid id as a block
 df$id <- as.factor(df$id)
@@ -71,6 +110,7 @@ df$session_id <- as.factor(df$session_id) #
 runACF(df$session_id, m2, store = F) 
 
 
+
 # backwards stepwise selection
 
 
@@ -78,22 +118,22 @@ runACF(df$session_id, m2, store = F)
 # Fit GEE CReSS model with SALSA2D 
 
 ### STEP 1: check for collinearity between covariates in glm model
-fullmod <- glm(pa ~ treatment + jul_day + start_hr + obs + dist2sq + fish + x.pos + y.pos,
+fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + dist2sq + fish + x.pos + y.pos,
                na.action = "na.fail", family = "binomial", data = df)
 # check for collinearity
 car::vif(fullmod) # most between 1 & 2.1 so pretty much good! dist2Sq and x/y pretty collin so throw out dist
 
-# refit without distance
-fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + fish + x.pos + y.pos,
+# refit without distance 
+fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + fish + x.pos + y.pos + x.pos:y.pos,
                na.action = "na.fail", family = "binomial", data = df)
 
 # check for collinearity
-car::vif(fullmod) # much better, fish and day only slightly collinear but we can keep it. (1-2)
+car::vif(fullmod_linear) # much better, fish and day only slightly collinear but we can keep it. (1-2)
 
 # STEP 2: make splineParams object with knots at the mean of each variable
-splineParams<-makesplineParams(data=df, varlist=c("x.pos", "y.pos", "fish", "jul_day", "start_hr"))
+splineParams<-makesplineParams(data=df, varlist=c("x.pos", "y.pos", "fish","jul_day", "start_hr"))
 
-# fit new full mod with splines 
+# fit new full mod with splines binomial dist
 fullmod <- glm(pa ~ treat + obs + bs(x.pos, knots = splineParams[[2]]$knots) 
                           + bs(y.pos, knots = splineParams[[3]]$knots)
                           + bs(fish,knots = splineParams[[4]]$knots)
@@ -101,20 +141,36 @@ fullmod <- glm(pa ~ treat + obs + bs(x.pos, knots = splineParams[[2]]$knots)
                           + bs(start_hr, knots =splineParams[[6]]$knots),
                           na.action = "na.fail", family = "binomial", data = df)
 
+# check qbn distribution to see if dispersion para is 0
+fullmod_qbn <- glm(pa ~ treat + obs + bs(x.pos, knots = splineParams[[2]]$knots) 
+               + bs(y.pos, knots = splineParams[[3]]$knots)
+               + bs(fish,knots = splineParams[[4]]$knots)
+               + bs(jul_day,knots = splineParams[[5]]$knots)
+               + bs(start_hr, knots =splineParams[[6]]$knots),
+               na.action = "na.fail", family = "quasibinomial", data = df)
+summary(fullmod_qbn)
+summary(fullmod)
+
 # STEP 3: check for correlated residuals in temporal covariates
 varList <- c("XPos", "YPos", "fish", "jul_day", "start_hr")
 runs.test(residuals(fullmod, type = "pearson", alternative = "two-sided")) # neg standardised runs stat and sm p == houston we have correlation
-plotRunsProfile(fullmod, varlist = c("jul_day", "start_hr")) #definite correlation
+ps <- par(ask = FALSE, mfrow = c(2,2))
+runs_plots <- plotRunsProfile(fullmod, varlist = c("start_hr")) #definite correlation
 
-# ACF plot with blocks as survey sesh
+# ACF plot with blocks as survey sesh, day hour
 df$session_id <- factor(df$session_id)
-runACF(df$session_id, fullmod, store = F) #some positive AC, use this as our cor block
+df$day_hour_as_block <- as.factor(paste(df$jul_day, df$start_hr,sep = ""))
+ps <- par(ask = FALSE, mfrow = c(1,1))
+runACF(df$day_hour_as_block, fullmod, store = F) #some positive AC, use this as our cor block
+ACF(fullmod)
 
 # STEP 4: plot cumulative residuals for model to check over or under prediction
+par(ask = F, mfrow = c(3,3))
 plotCumRes(fullmod, varlist= varList, splineParams) 
 
 # compare with model that just has linear terms
-plotCumRes(fullmod_linear, varlist = varList)
+par(ask = F, mfrow = c(3,3))
+plotCumRes(fullmod_linear, varlist= c(varList), splineParams) 
 
 #looks like x and y are linear and all the rest shouldnt be
 # model defo over and under predicting at times, lets run SALSA for more flexibility
@@ -126,13 +182,16 @@ devtools::install_github(repo="lindesaysh/MRSea@v1.01")
 # Create the variable "response" needed by SALSA
 df$response <- df$pa
 
+# create foldid variable
+#df$foldid<-getCVids(data = df, folds = 5, block = "day_hour_as_block")
+
 # Set initial model without spline-based terms
 initialModel <- glm(response ~ treatment, family=binomial, data=df)
 
 # Set SALSA arguments
 factorList <- c("obs", "treatment")
 varList <- c("x.pos", "y.pos", "fish", "jul_day", "start_hr")
-salsa1DList <- list(fitnessMeasure="AIC", minKnots_1d=rep(1, 5),
+salsa1DList <- list(fitnessMeasure="cv.gamMRSea", minKnots_1d=rep(1, 5),
                     maxKnots_1d=rep(5, 5), startKnots_1d=rep(1, 5),
                     degree=rep(2, 5), maxIterations=100,
                     gaps=rep(0, 5))
@@ -144,12 +203,15 @@ set.seed(53195)
 salsa1D <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
                            factorList, varlist_cyclicSplines=NULL,
                            splineParams=NULL, datain=df,
-                           suppress.printout=TRUE, removal=FALSE,
+                           suppress.printout=TRUE, removal=T,
                            panelid=NULL)
 
 # STEP 6: Pick best model based on AIC
-bestModel1D <- salsa1D$bestModel
+bestModel1D 
+bestmod1D_removal<- salsa1D$bestModel
+summary(bestmod1D_removal)
 
+AIC(bestmod1D_removal, bestModel1D)
 # salsa took the initial model with one knot at mean for each var and added 
 # 2 knots for fish at 164 and 728; and 3 knots for start hour at 10, 13, 15;
 # The result of SALSA is additional flexibility added to the model for the
@@ -246,7 +308,7 @@ runs.test(residuals(bestModel2D, type = "pearson")) #still neg stat, still tiny 
 # N.B. for the GEE formula, the data must be ordered by block (which this is)
 # and the blockid must be numeric
 # specify parameters for local radial:
-
+length(unique(df$day_hour_as_block))
 df <- arrange(df, block_as_session)
 radiusIndices <- splineParams[[1]]$radiusIndices
 dists <- splineParams[[1]]$dist
@@ -257,9 +319,9 @@ aR <- as.vector(salsa2D$aR$aR1)
 baseModel <- update(baseModel, . ~ .)
 
 # Re-fit the chosen model as a GEE (based on SALSA knot placement) and
-# GEE p-values
+# GEE p-values #see if model improves with different blocking str
 geeModel <- geepack::geeglm(formula(baseModel), data = df, family = "binomial",
-                   id = block_as_session)
+                   id = id)
 getPvalues(geeModel) #treatment, lrf, and treat:lrf not significant
 summary(geeModel)
 
@@ -268,6 +330,8 @@ noint.model<-update(geeModel, .~. - as.factor(treatment):
                       LocalRadialFunction(radiusIndices, dists, radii, aR))
 # reshow p-values
 getPvalues(noint.model)
+
+AIC(geeModel)
 
 
 

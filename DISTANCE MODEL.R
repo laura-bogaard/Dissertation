@@ -27,6 +27,7 @@ tide <- distdat$tide_ht #height of the tide in m
 fish <- distdat$fish  # net fish counts through the locks that day
 
 #########
+pairs(distdat)
 # EDA
 qplot(data = distdat, x  = tide_dist, y = idv_rl) # decreasing logarhythmic relationship,
 qplot(data = distdat, x  = tide_dist, y = jul_day) #grouped by fish phases
@@ -134,7 +135,7 @@ m6 <- gam(tide_dist ~ treatment + s(jul_day, k = 5) + s(start_hr, k = 5) + forag
 summary(m6)
 gam.check(m6)
 
-QAIC(m1, m2, m3, m4, m5, m6)
+AIC(m1, m2, m3, m4, m5, m6)
 
 ###############
 ############# Distance GAM with GEE and SALSA 1D
@@ -154,7 +155,6 @@ car::vif(fullmod) ## smoothed Day is SUPER high (18) and Observer (6) so defo co
 # check for correlated residuals
 lawstat::runs.test(residuals(fullmod, type = "pearson")) # returns a low p-val indicatinf adn issue with correlated resid
 plotRunsProfile(fullmod, varlist = c("jul_day")) #definite correlation
-
 
 # ACF plot with blocks as survey sesh
 distdat$session_id <- factor(distdat$session_id)
