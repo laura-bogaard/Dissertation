@@ -31,7 +31,9 @@ numericsesh <- data.frame(session_id = levels(as.factor(df$session_id)),
 df <- left_join(df, numericsesh, by = "session_id" )
 arrange(df, session_id)
 
-#######
+
+# TPS Models
+####### 
 #EDA
 qplot(df$treat, df$pa)
 
@@ -87,9 +89,6 @@ summary(TPSInt)
 AIC(TPS, TPS2, TPSInt)
 
 
-
-
-
 ## STEP 3: check for correlated residuals in temporal covariates
 runs.test(residuals(m2, type = "pearson", alternative = "two-sided")) 
 
@@ -108,9 +107,6 @@ runACF(df$id, m2, store = F) #interesting.. this is the one
 #try survey sesh as block
 df$session_id <- as.factor(df$session_id) #
 runACF(df$session_id, m2, store = F) 
-
-
-
 # backwards stepwise selection
 
 
@@ -121,7 +117,7 @@ runACF(df$session_id, m2, store = F)
 fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + dist2sq + fish + x.pos + y.pos,
                na.action = "na.fail", family = "binomial", data = df)
 # check for collinearity
-car::vif(fullmod) # most between 1 & 2.1 so pretty much good! dist2Sq and x/y pretty collin so throw out dist
+car::vif(fullmod_linear) # most between 1 & 2.1 so pretty much good! dist2Sq and x/y pretty collin so throw out dist
 
 # refit without distance 
 fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + fish + x.pos + y.pos + x.pos:y.pos,
@@ -148,10 +144,11 @@ fullmod_qbn <- glm(pa ~ treat + obs + bs(x.pos, knots = splineParams[[2]]$knots)
                + bs(jul_day,knots = splineParams[[5]]$knots)
                + bs(start_hr, knots =splineParams[[6]]$knots),
                na.action = "na.fail", family = "quasibinomial", data = df)
-summary(fullmod_qbn)
+
+summary(fullmod_qbn) #nope dispparm = 1.14, not zero
 summary(fullmod)
 
-# STEP 3: check for correlated residuals in temporal covariates
+### STEP 3: check for correlated residuals in numeric covariates
 varList <- c("XPos", "YPos", "fish", "jul_day", "start_hr")
 runs.test(residuals(fullmod, type = "pearson", alternative = "two-sided")) # neg standardised runs stat and sm p == houston we have correlation
 ps <- par(ask = FALSE, mfrow = c(2,2))
@@ -162,9 +159,18 @@ df$session_id <- factor(df$session_id)
 df$day_hour_as_block <- as.factor(paste(df$jul_day, df$start_hr,sep = ""))
 ps <- par(ask = FALSE, mfrow = c(1,1))
 runACF(df$day_hour_as_block, fullmod, store = F) #some positive AC, use this as our cor block
-ACF(fullmod)
 
-# STEP 4: plot cumulative residuals for model to check over or under prediction
+# acf plot w session id as block
+ps <- par(ask = FALSE, mfrow = c(1,1))
+runACF(df$session_id, fullmod, store = F) #slots of +AC -- unsure which to pick
+
+# try with sessionid+ grid id
+df$session_grid_block <- as.factor(paste(df$session_id, df$id, sep= ""))
+ps <- par(ask = FALSE, mfrow = c(1,1))
+runACF(df$session_grid_block, fullmod, store = F) 
+# this takes literally 5 minutes to run. and now we have zero AC--but it feels wrong
+
+### STEP 4: plot cumulative residuals for model to check over or under prediction
 par(ask = F, mfrow = c(3,3))
 plotCumRes(fullmod, varlist= varList, splineParams) 
 
@@ -182,7 +188,7 @@ devtools::install_github(repo="lindesaysh/MRSea@v1.01")
 # Create the variable "response" needed by SALSA
 df$response <- df$pa
 
-# create foldid variable
+# create foldid variable # not necessary in new version of salsa
 #df$foldid<-getCVids(data = df, folds = 5, block = "day_hour_as_block")
 
 # Set initial model without spline-based terms
@@ -199,19 +205,29 @@ salsa1DList <- list(fitnessMeasure="cv.gamMRSea", minKnots_1d=rep(1, 5),
 # Load library
 library(MRSea)
 set.seed(53195)
-# Run SALSA
-salsa1D <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
+# Run SALSA with removal
+salsa1D_RT <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
                            factorList, varlist_cyclicSplines=NULL,
                            splineParams=NULL, datain=df,
                            suppress.printout=TRUE, removal=T,
                            panelid=NULL)
+bestmod1D_RT<- salsa1D_RT$bestModel
+summary(bestmod1D_RT)
+# Run SALSA without removal
+salsa1D_RF <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
+                                factorList, varlist_cyclicSplines=NULL,
+                                splineParams=NULL, datain=df,
+                                suppress.printout=TRUE, removal=F,
+                                panelid=NULL)
+bestmod1D_RF<- salsa1D_RF$bestModel
+summary(bestmod1D_RF)
 
 # STEP 6: Pick best model based on AIC
-bestModel1D 
-bestmod1D_removal<- salsa1D$bestModel
-summary(bestmod1D_removal)
+AIC(bestmod1D_RT, bestmod1D_RF)
 
-AIC(bestmod1D_removal, bestModel1D)
+salsa1D_RF$modelFits1D
+salsa1D_RT$modelFits1D
+
 # salsa took the initial model with one knot at mean for each var and added 
 # 2 knots for fish at 164 and 728; and 3 knots for start hour at 10, 13, 15;
 # The result of SALSA is additional flexibility added to the model for the
@@ -256,6 +272,20 @@ salsa2D <- MRSea::runSALSA2D(bestModel1D, salsa2DList, d2k=distMats$dataDist,
                              k2k=distMats$knotDist, splineParams=NULL,
                              tol=0, chooserad=F, panels=NULL,
                              suppress.printout=TRUE)
+########## start knots as 7
+salsa2DList7 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
+                     startKnots=7, minKnots=2, maxKnots=20,
+                     gap=1, r_seq = r_seq, interactionTerm = "treatment")
+#reset
+splineParams <- salsa1D$splineParams
+
+# salsa w knots at 8
+set.seed(53195)
+t7 <- system.time({ salsa2D_7 <- MRSea::runSALSA2D(bestModel1D, salsa2DList7, d2k=distMats$dataDist,
+                                                   k2k=distMats$knotDist, splineParams=NULL,
+                                                   tol=0, chooserad=F, panels=NULL,
+                                                   suppress.printout=TRUE)
+})
 
 ########## start knots as 8
 salsa2DList8 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
@@ -270,6 +300,20 @@ t8 <- system.time({ salsa2D_8 <- MRSea::runSALSA2D(bestModel1D, salsa2DList8, d2
                              k2k=distMats$knotDist, splineParams=NULL,
                              tol=0, chooserad=F, panels=NULL,
                              suppress.printout=TRUE)
+})
+########## start knots as 9
+salsa2DList9 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
+                     startKnots=9, minKnots=2, maxKnots=20,
+                     gap=1, r_seq = r_seq, interactionTerm = "treatment")
+#reset
+splineParams <- salsa1D$splineParams
+
+# salsa w knots at 9
+set.seed(53195)
+t9 <- system.time({ salsa2D_9 <- MRSea::runSALSA2D(bestModel1D, salsa2DList9, d2k=distMats$dataDist,
+                                                   k2k=distMats$knotDist, splineParams=NULL,
+                                                   tol=0, chooserad=F, panels=NULL,
+                                                   suppress.printout=TRUE)
 })
 
 ########## start knots as 10
@@ -288,56 +332,102 @@ t10 <- system.time({ salsa2D_10 <- MRSea::runSALSA2D(bestModel1D, salsa2DList10,
 })
 
 
+# compare CV Scores
+getCV_CReSS(df, salsa1D_RT$bestModel)
+getCV_CReSS(df, salsa2D$bestModel) #6 start knots
+getCV_CReSS(df, salsa2D_7$bestModel) 
+getCV_CReSS(df, salsa2D_8$bestModel)
+getCV_CReSS(df, salsa2D_9$bestModel) 
+getCV_CReSS(df, salsa2D_10$bestModel)
+
+#compare AIC scores
+AIC(salsa1D_RT$bestModel, salsa2D$bestModel, salsa2D_7$bestModel, salsa2D_8$bestModel, 
+salsa2D_9$bestModel, salsa2D_10$bestModel)
+
+
 # Store "best" model
-bestModel2D <- salsa2D$bestModel
-baseModel <- salsa2D$bestModel
+baseModel <- salsa2D_9$bestModel
 
 # Summary of results
-summary(bestModel2D)
-# save the model object
-stats::anova(bestModel2D, test="Chisq")
+summary(baseModel)
+
+stats::anova(baseModel, test="Chisq")
 
 # update spline parameter object
-splineParams <- salsa2D$splineParams
+splineParams <- salsa2D_9$splineParams
 
 # STEP 11: check for residual correlation
-runs.test(residuals(bestModel2D, type = "pearson")) #still neg stat, still tiny p
+runs.test(residuals(baseModel, type = "pearson")) #still neg stat, still tiny p
 
-## Significant positive resid correlation therefore refit as GEE
+## STEP 12: Significant positive resid correlation therefore refit as GEE
 ########
 # N.B. for the GEE formula, the data must be ordered by block (which this is)
 # and the blockid must be numeric
 # specify parameters for local radial:
-length(unique(df$day_hour_as_block))
-df <- arrange(df, block_as_session)
+
 radiusIndices <- splineParams[[1]]$radiusIndices
 dists <- splineParams[[1]]$dist
 radii <- splineParams[[1]]$radii
 aR <- splineParams[[1]]$invInd[splineParams[[1]]$knotPos] ## this comes up as null, so had to workaround aR not within SP, in larger model object
-aR <- as.vector(salsa2D$aR$aR1) 
+aR <- as.vector(salsa2D_9$aR$aR1) 
+
 # update model in workspace with parameters for spatial smooth (above)
 baseModel <- update(baseModel, . ~ .)
 
 # Re-fit the chosen model as a GEE (based on SALSA knot placement) and
 # GEE p-values #see if model improves with different blocking str
 geeModel <- geepack::geeglm(formula(baseModel), data = df, family = "binomial",
-                   id = id)
-getPvalues(geeModel) #treatment, lrf, and treat:lrf not significant
+                   id = session_grid_block)
+getPvalues(geeModel) 
 summary(geeModel)
 
-# how to remove impact
-noint.model<-update(geeModel, .~. - as.factor(treatment):
-                      LocalRadialFunction(radiusIndices, dists, radii, aR))
+# STEP 13: Remove impact how to remove impact
+geeModel$formula
+
+noint.model <- response ~  treatment + bs(x.pos, knots = splineParams[[2]]$knots,degree = splineParams[[2]]$degree, Boundary.knots = splineParams[[2]]$bd) +
+                           bs(y.pos, knots = splineParams[[3]]$knots, degree = splineParams[[3]]$degree,Boundary.knots = splineParams[[3]]$bd) + 
+                           bs(fish, knots = splineParams[[4]]$knots, degree = splineParams[[4]]$degree, Boundary.knots = splineParams[[4]]$bd) + 
+                           bs(jul_day, knots = splineParams[[5]]$knots, degree = splineParams[[5]]$degree,Boundary.knots = splineParams[[5]]$bd) + 
+                           bs(start_hr,knots = splineParams[[6]]$knots, degree = splineParams[[6]]$degree, Boundary.knots = splineParams[[6]]$bd) + 
+                           LRF.g(radiusIndices, dists, radii, aR)
+nointModel <- geepack::geeglm(formula(noint.model), data = df, family = "binomial",id = session_grid_block)
 # reshow p-values
-getPvalues(noint.model)
+getPvalues(nointModel)
 
 AIC(geeModel)
 
+str(noint.model)
 
+## Step 14: Partial residual plots doesnt work for noncontinuous variables?
+# par(mfrow = c(2, 3))
+# runPartialPlots(geeModel, df)
+# runPartialPlots(geeModel, df, varlist.in = c("fish"))
+# runPartialPlots(geeModel, df, varlist = c("start_hr"))
+# runPartialPlots(geeModel, df, varlist = c("jul_day"))
 
+## Step 15: DIAGNOSTICS
+# create observed vs fitted and fitted vs residual plots
+runDiagnostics(geeModel, plotting = b, save = T) #How to interpret these with binary output
+
+## Step 16: COVRATIO and PRESS Statistic --- This will take 353 minutes or 6 hours... run over night
+timeInfluenceCheck(geeModel, df$session_grid_block, dists, splineParams)
+# influence plots (covratio and press statistics)
+# influence <- runInfluence(geeModel, data$session_grid_block,  dists, splineParams)
+
+# step 18: residual plots
+# residual plot ## ADD LABELS
+resids <- fitted(geeModel) - df$pa
+dims <- getPlotdimensions(df$x.pos, df$y.pos, 10, 10)
+par(mfrow = c(1, 2), mar = c(3, 3, 3, 5))
+quilt.plot(df$x.pos[df$treatment == "OFF"], df$y.pos[df$treatment == "OFF"], 
+           resids[df$treatment == "OFF"], asp = 1, ncol = dims[2], nrow = dims[1],
+           zlim = c(-2.2, 2.2), main = "OFF",xlab = "x", ylab = "y")
+quilt.plot(df$x.pos[df$treatment == "ON"], df$y.pos[df$treatment == "ON"], 
+           resids[df$treatment == "ON"], asp = 1, ncol = dims[2], nrow = dims[1],
+           zlim = c(-2.2, 2.2), main = "ON", xlab = "x", ylab = "y")
 #######
 ############# Fit with interaction between x, y, treat
-# STEP 9: Set SALSA parameters 
+# Set SALSA parameters 
 salsa2DList <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
                     startKnots=6, minKnots=2, maxKnots=20,
                     gap=1, r_seq = r_seq, interactionTerm = "as.factor(treatment)")
@@ -364,7 +454,7 @@ baseModelint <- salsa2Dint$bestModel
 # update spline parameter object
 splineParams <- salsa2Dint$splineParams
 
-# STEP 11: check for residual correlation
+# check for residual correlation
 runs.test(residuals(bestModel2Dint, type = "pearson")) #still neg stat, still tiny p
 
 ## Significant positive resid correlation therefore refit as GEE CANT
@@ -382,8 +472,8 @@ baseModelint <- update(baseModelint, . ~ .)
 # Re-fit the chosen model as a GEE (based on SALSA knot placement) and
 # GEE p-values
 geeModel <- geepack::geeglm(formula(baseModel), data = df, family = "binomial",
-                            id = block_as_session)
-getPvalues(geeModel, varlist = varList, factorlist = factorList)
+                            id = session_grid_block)
+getPvalues(geeModel, varlist = varList, factorlist = "treatment")
 
 
 
