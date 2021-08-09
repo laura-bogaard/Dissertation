@@ -323,7 +323,7 @@ timeInfluenceCheck(geeModel, df$session_grid_block, dists, splineParams)
 # influence plots (covratio and press statistics)
 # influence <- runInfluence(geeModel, data$session_grid_block,  dists, splineParams)
 
-### Step 18: residual plots
+### Step 17: RAW residual plots
 resids <- fitted(geeModel) - df$pa
 dims <- getPlotdimensions(df$x.pos, df$y.pos, 10, 10)
 par(mfrow = c(1, 2), mar = c(3, 3, 3, 5))
@@ -339,6 +339,65 @@ timeInfluenceCheck(geeModel, df$block_as_session, dists, splineParams)
 # influence plots (covratio and press statistics) this will take 6hrs
 # influence <- runInfluence(bestModel2D, df$block_as_session, dists, splineParams)
 
+### Step 18: Predictions
+# loading the prediction grid data
+df$area <- rep(100, length(df$pa)) #add area column
+predictData <- df
+head(predictData)
+
+# create the distance matrix for predictions
+dists <- makeDists(cbind(predictData$x.pos, predictData$y.pos),
+                   na.omit(knotgrid), knotmat = FALSE)$dataDist
+# use baseModel to make predictions to avoid a warning from
+# using geeModel (same answers though)
+predslink <- predict(baseModel, predictData, type = "link")
+# reversing the logit-link to convert predictions back to the response scale
+preds <- plogis(predslink)
+
+### Step 19 visualising predictions
+# plotting the predictions for before and after impact
+# get the plot dimensions. We know each cell is 10x10m
+dims<-getPlotdimensions(x.pos=predictData$x.pos, predictData$y.pos,
+                        segmentWidth=10, segmentLength=10)
+par(mfrow=c(1,2), mar=c(3,3,3,5))
+quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
+           predictData$y.pos[predictData$treatment=="OFF"],
+           preds[predictData$treatment=="OFF"], asp=1, nrow=dims[1], ncol=dims[2], 
+           zlim=c(0, maxlim = 0.3), main = "TAST OFF", add.legend = F)
+
+quilt.plot(predictData$x.pos[predictData$treatment=="ON"],
+           predictData$y.pos[predictData$treatment=="ON"], preds[predictData$treatment=="ON"],
+           asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.3), main = "TAST ON")
+
+# add legend label?
+
+## Step 20: bootstrap CI
+# do the bootstrap
+do.bootstrap.cress(df, predictData, ddf.obj=NULL, baseModel, splineParams,
+                   dists, B=250)
+
+# read in bootstrap predictions
+load("predictionboot.RData")
+# make percentile confidence intervals
+cis <- makeBootCIs(bootPreds)
+
+## Step 21: visualising boot CI
+
+## Step 22: Identifying Differences
+xx <- length(bootPreds[predictData$treatment=="OFF", ])
+
+bootPreds[predictData$treatment=="OFF", ]
+bootPreds[predictData$treatment=="ON", ] <- bootPreds[predictData$treatment=="ON", ]
+
+differences <- getDifferences(OFFPreds = bootPreds[predictData$treatment=="OFF", ],
+                              ONPreds = bootPreds[predictData$treatment=="ON"[1:xx],])
+
+length diff = 1586250
+
+?split
+
+
+
 
 ## Map model for On and Off
 par(mfrow=c(1,2))
@@ -353,13 +412,12 @@ for (treat in c("ON", "OFF"))
                      nrow=10, ncol=10,
                      zlim=range(fitted(geeModel)),
                      main=paste0("TAST ", treat))
-  # if (treat %in% "ON")
-  # {
-  # #somethign about turn off legend for one of the 
-  # }
+  if (treat %in% "ON")
+  #somethign about turn off legend for one of the
+  }
 
 }
 
 #### Predictions 
-predict.gamMRSea()
+predict.gamMRSea(geeModel)
 ############
