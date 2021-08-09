@@ -22,8 +22,95 @@ df$treatment <- as.factor(df$treatment)
 df$obs <- as.factor(df$obs)
 df$x.pos <- df$x
 df$y.pos <- df$y
-df$start_hr <- df$start_hr
+df$start_hr <- as.factor(df$start_hr)
 df$session_grid_block <- as.factor(paste(df$session_id, df$id, sep= ""))
+
+## add numeric ID for each experimental unit (session_id) to cover temporal AC
+## in GEE model (potentially)
+# seshlevels <-  levels(as.factor(df$session_id)) 
+# numericsesh <- data.frame(session_id = levels(as.factor(df$session_id)),
+#                           block_as_session = as.factor(seq(1, length(seshlevels), 1)))
+# 
+# df <- left_join(df, numericsesh, by = "session_id" )
+# arrange(df, session_id)
+
+# # TPS Models
+# ####### 
+# #EDA
+# qplot(df$treat, df$pa)
+# 
+# # start with full linear model
+# m0 <- glm(pa ~ treatment + x.pos + y.pos + fish + obs + dist2sq + jul_day + start_hr, data = df, family = binomial)
+# m0
+# summary(m0)
+# # check for collinearity
+# vif(m0) # kick out dist to sq
+# 
+# m1 <- glm(pa ~ treatment + x.pos + y.pos + fish + obs + jul_day + start_hr, data = df, family = binomial)
+# summary(m1)
+# # check for collinearity
+# vif(m1) #  better
+# 
+# # add spatial interaction to account for spatial autocorrelation
+# m2<- gam(pa ~ treatment + s(x.pos, y.pos) + fish + obs + jul_day + start_hr, data = df, family = binomial)
+# summary(m2)
+# 
+# ### try TPS models with and without interactions
+# library(mgcv)
+# TPS <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+#                    s(start_hr, k= 2) + s(jul_day, k= 2) + treat + obs,
+#                  family=binomial, data=df)
+# summary(TPS)
+# gam.check(TPS)
+# 
+# library(mgcv)
+# TPS <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+#                    s(start_hr, k= 2) + s(jul_day, k= 2) + treat + obs,
+#                  family=binomial, data=df)
+# summary(TPS)
+# gam.check(TPS)
+# # drop hr cause its linear
+# TPS2 <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos) +
+#                    s(start_hr) + s(jul_day, k= 2) + treat + obs,
+#                  family=binomial, data=df)
+# summary(TPS2)
+# gam.check(TPS2)
+# 
+# # did not 
+# 
+# 
+# 
+# TPSInt <- mgcv::gam(pa ~ s(fish, k = 2) + s(x.pos, y.pos, by = treat) +
+#                       s(start_hr, k= 2) + s(jul_day, k= 2) + treat +obs,
+#                     family= binomial, data=df)
+# gam.check(TPSInt)
+# 
+# summary(TPSInt)
+# 
+# 
+# AIC(TPS, TPS2, TPSInt)
+# 
+# 
+# ## STEP 3: check for correlated residuals in temporal covariates
+# runs.test(residuals(m2, type = "pearson", alternative = "two-sided")) 
+# 
+# plotRunsProfile(m2, varlist = c("x.pos", "y.pos", "jul_day", "start_hr")) 
+# #definite residual correlation
+# 
+# # ACF plot with blocks as survey sesh + gr id
+# df$blockid <- as.factor(paste(df$block_as_session, df$id,sep = ""))
+# #WARNING THIS RUNS FOREVER
+# # runACF(df$blockid, m2, store = F) #very strange output just gives straight red line 
+# 
+# #Try grid id as a block
+# df$id <- as.factor(df$id)
+# runACF(df$id, m2, store = F) #interesting.. this is the one
+# 
+# #try survey sesh as block
+# df$session_id <- as.factor(df$session_id) #
+# runACF(df$session_id, m2, store = F) 
+# # backwards stepwise selection
+
 
 #########
 # Fit GEE CReSS model with SALSA2D 

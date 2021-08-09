@@ -7,23 +7,19 @@ padat <- read.csv("~/Desktop/TASTBALLARD/TAST WD/Dissertation/pa_data.csv")
 library(tidyverse)
 library(car)
 library(lawstat)
-library(devtools)
-devtools::install_github(repo="lindesaysh/MRSea@v1.01")
 library(MRSea)
 library(mgcv)
 library(splines)
 library(geepack)
 
 ## format data
-df <- padat 
-# rename so its easier to type :)
+df <- padat %>%
+  select(pa, treatment, obs, x, y, session_id, id, jul_day, start_hr, obs, fish)
 df$pa <- as.numeric(df$pa)
 df$treatment <- as.factor(df$treatment)
 df$obs <- as.factor(df$obs)
 df$x.pos <- df$x
 df$y.pos <- df$y
-df$start_hr <- df$start_hr
-df$session_grid_block <- as.factor(paste(df$session_id, df$id, sep= ""))
 
 #########
 # Fit GEE CReSS model with SALSA2D 
@@ -33,7 +29,7 @@ fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + dist2sq + fish
                na.action = "na.fail", family = "binomial", data = df)
 
 ## check for collinearity
-car::vif(fullmod_linear) 
+vif(fullmod_linear) 
 # most between 1 & 2.1 so pretty much good! dist2Sq and x/y pretty collin so throw out dist
 
 ## refit without distance 
@@ -41,18 +37,19 @@ fullmod_linear <- glm(pa ~ treatment + jul_day + start_hr + obs + fish + x.pos +
                na.action = "na.fail", family = "binomial", data = df)
 
 ## recheck for collinearity
-car::vif(fullmod_linear) 
+vif(fullmod_linear) 
 # much better, fish and day only slightly collinear but we can keep it. (1-2)
 
-### STEP 2: make splineParams object with knots at the mean of each variable
-splineParams<-makesplineParams(data=df, varlist=c("x.pos", "y.pos", "fish","jul_day"))
+# STEP 2: make splineParams object with knots at the mean of each variable
+splineParams<-makesplineParams(data=df, varlist=c("x.pos", "y.pos", "fish","jul_day", "start_hr"))
 
-## fit new full mod with splines binomial dist
-fullmod <- glm(pa ~ treat + obs + start_hr + bs(x.pos, knots = splineParams[[2]]$knots) 
-                          + bs(y.pos, knots = splineParams[[3]]$knots)
-                          + bs(fish,knots = splineParams[[4]]$knots)
-                          + bs(jul_day,knots = splineParams[[5]]$knots),
-                          na.action = "na.fail", family = "binomial", data = df)
+# fit new full mod with splines binomial dist
+fullmod <- glm(pa ~ treatment + obs + bs(x.pos, knots = splineParams[[2]]$knots) 
+               + bs(y.pos, knots = splineParams[[3]]$knots)
+               + bs(fish,knots = splineParams[[4]]$knots)
+               + bs(jul_day,knots = splineParams[[5]]$knots)
+               + bs(start_hr, knots =splineParams[[6]]$knots),
+               na.action = "na.fail", family = "binomial", data = df)
 
 # ## check qbn distribution to see if dispersion para is 0
 # fullmod_qbn <- glm(pa ~ treat + obs + bs(x.pos, knots = splineParams[[2]]$knots) 
@@ -66,9 +63,13 @@ fullmod <- glm(pa ~ treat + obs + start_hr + bs(x.pos, knots = splineParams[[2]]
 # summary(fullmod)
 
 ### STEP 3: check for correlated residuals in descrete covariates using runs tests
-varList <- c("y.pos", "y.pos", "fish", "jul_day")
+varList <- c("y.pos", "y.pos", "fish", "jul_day", "start_hr")
 runs.test(residuals(fullmod, type = "pearson", alternative = "two-sided")) 
-# neg standardised runs stat and sm p == houston we have correlation
+# neg standardised runs stat and sm p == we have correlation
+
+par(ask = FALSE, mfrow = c(2,2))
+runs_plots <- plotRunsProfile(fullmod, varlist = c("start_hr")) 
+
  par(ask = FALSE, mfrow = c(1,2))
 runs_plots <- plotRunsProfile(fullmod, varlist = c("jul_day")) 
 
@@ -94,12 +95,13 @@ ps <- par(ask = FALSE, mfrow = c(1,1))
 runACF(df$session_id, fullmod, store = F) #slots of +AC -- unsure which to pick
 
 # try with sessionid + grid id
+df$session_grid_block <- as.factor(paste(df$session_id, df$id, sep= ""))
 ps <- par(ask = FALSE, mfrow = c(1,1))
 runACF(df$session_grid_block, fullmod, store = F) 
 # this takes literally 5 minutes to run. and now we have zero AC--but it feels wrong
 
 ### STEP 4: plot cumulative residuals for model to check over or under prediction
-par(ask = F, mfrow = c(2,3))
+par(ask = F, mfrow = c(3,3))
 plotCumRes(fullmod, varlist= varList, splineParams) 
 
 # compare with model that just has linear terms
@@ -117,15 +119,13 @@ df$response <- df$pa
 initialModel <- glm(response ~ treatment, family=binomial, data=df)
 
 ## Set SALSA arguments
-factorList <- c("obs", "treatment", "start_hr")
-varList <- c("x.pos", "y.pos", "fish", "jul_day")
-salsa1DList <- list(fitnessMeasure="cv.gamMRSea", minKnots_1d=rep(1, 4),
-                    maxKnots_1d=rep(5, 4), startKnots_1d=rep(1, 4),
-                    degree=rep(2, 4), maxIterations=100,
-                    gaps=rep(0, 4))
-
-
-
+factorList <- c("obs", "treatment")
+varList <- c("x.pos", "y.pos", "fish", "jul_day", "start_hr")
+#create salsa list 
+salsa1DList <- list(fitnessMeasure="AIC", minKnots_1d=rep(1, 5),
+                    maxKnots_1d=rep(5, 5), startKnots_1d=rep(1, 5),
+                    degree=rep(2, 5), maxIterations=100,
+                    gaps=rep(0, 5))
 
 ## Run SALSA with removal
 set.seed(53195)
@@ -134,8 +134,7 @@ salsa1D_RT <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
                            splineParams=NULL, datain=df,
                            suppress.printout=TRUE, removal=T,
                            panelid=NULL)
-bestModel1D<- salsa1D_RT$bestModel
-summary(bestmod1D)
+bestmod1D_RT<- salsa1D_RT$bestModel
 
 ## Run SALSA without removal
 salsa1D_RF <- MRSea::runSALSA1D(initialModel, salsa1DList, varList,
@@ -150,13 +149,8 @@ summary(bestmod1D_RF)
 ### STEP 6: Pick best model based on AIC
 AIC(bestmod1D_RT, bestmod1D_RF)
 
-salsa1D_RF$modelFits1D
-salsa1D_RT$modelFits1D
-
-# salsa took the initial model with one knot at mean for each var and added 
-# 2 knots for fish at 164 and 728; and 3 knots for start hour at 10, 13, 15;
-# The result of SALSA is additional flexibility added to the model for the
-# relationship between presence absence probability and fish / hr
+# model with removal is the best model
+bestModel1D <- salsa1D_RT$bestModel
 
 ### STEP 7: Select initial knot locations using a space-filling design
 
@@ -179,8 +173,6 @@ distMats <- makeDists(cbind(df$x.pos, df$y.pos), na.omit(knotgrid))
 ## create sequence of radii
 r_seq <- getRadiiChoices(numberofradii= 8, distMats$dataDist, basis = "gaussian")
 
-
-
 ### STEP 9: Set SALSA parameters start knots as 6
 salsa2DList6 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
                     startKnots=6, minKnots=2, maxKnots=20,
@@ -198,16 +190,15 @@ salsa2D_6 <- MRSea::runSALSA2D(bestModel1D, salsa2DList6, d2k=distMats$dataDist,
                              tol=0, chooserad=F, panels=NULL,
                              suppress.printout=TRUE)
 ## Trial start knots as 7
-salsa2DList7 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
-                     startKnots=7, minKnots=2, maxKnots=20,
-                     gap=1, r_seq = r_seq, interactionTerm = "treatment")
+#salsa2DList7 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
+                    ## gap=1, r_seq = r_seq, interactionTerm = "treatment")
 # reset
-splineParams <- salsa1D_RT$splineParams
-set.seed(53195)
-salsa2D_7 <- MRSea::runSALSA2D(bestModel1D, salsa2DList7, d2k=distMats$dataDist,
-                                                   k2k=distMats$knotDist, splineParams=NULL,
-                                                   tol=0, chooserad=F, panels=NULL,
-                                                   suppress.printout=TRUE)
+#splineParams <- salsa1D_RT$splineParams
+# #set.seed(53195)
+# #salsa2D_7 <- MRSea::runSALSA2D(bestModel1D, salsa2DList7, d2k=distMats$dataDist,
+#                                                    k2k=distMats$knotDist, splineParams=NULL,
+#                                                    tol=0, chooserad=F, panels=NULL,
+#                                                    suppress.printout=TRUE)
 
 ## Trial start knots as 8
 salsa2DList8 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
@@ -220,18 +211,18 @@ salsa2D_8 <- MRSea::runSALSA2D(bestModel1D, salsa2DList8, d2k=distMats$dataDist,
                              k2k=distMats$knotDist, splineParams=NULL,
                              tol=0, chooserad=F, panels=NULL,
                              suppress.printout=TRUE)
-
-## Trial start knots as 9
-salsa2DList9 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
-                     startKnots=9, minKnots=2, maxKnots=20,
-                     gap=1, r_seq = r_seq, interactionTerm = "treatment")
-#reset
-splineParams <- salsa1D_RT$splineParams
-set.seed(53195)
-salsa2D_9 <- MRSea::runSALSA2D(bestModel1D, salsa2DList9, d2k=distMats$dataDist,
-                                                   k2k=distMats$knotDist, splineParams=NULL,
-                                                   tol=0, chooserad=F, panels=NULL,
-                                                   suppress.printout=TRUE)
+# 
+# ## Trial start knots as 9
+# #salsa2DList9 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
+#                      startKnots=9, minKnots=2, maxKnots=20,
+#                      gap=1, r_seq = r_seq, interactionTerm = "treatment")
+# #reset
+# #splineParams <- salsa1D_RT$splineParams
+# #set.seed(53195)
+# #salsa2D_9 <- MRSea::runSALSA2D(bestModel1D, salsa2DList9, d2k=distMats$dataDist,
+#                                                    k2k=distMats$knotDist, splineParams=NULL,
+#                                                    tol=0, chooserad=F, panels=NULL,
+#                                                    suppress.printout=TRUE)
 
 ## Trial start knots as 10
 salsa2DList10 <- list(fitnessMeasure="AIC", knotgrid=knotgrid,
