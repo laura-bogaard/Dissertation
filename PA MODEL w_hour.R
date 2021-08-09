@@ -13,7 +13,8 @@ library(splines)
 library(geepack)
 
 ## format data
-df <- padat
+df <- padat %>%
+  select(pa, treatment, obs, x, y, session_id, id, jul_day, start_hr, obs, fish)
 df$pa <- as.numeric(df$pa)
 df$treatment <- as.factor(df$treatment)
 df$obs <- as.factor(df$obs)
