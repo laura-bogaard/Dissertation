@@ -342,32 +342,32 @@ influence <- runInfluence(geeModel, df$block_as_session, dists, splineParams)
 ### Step 18: Predictions
 # loading the prediction grid data
 df$area <- rep(100, length(df$pa)) #add area column
-
+predictData <- df
 # generate a prediction data set -- ID differences only works if there are the same numnber of rows for on and off
 ## so pred data will be a randomselection of 80% OFF data and nrow(0.8*OFF) of on data, then rbound
-#split data to on and off
-dataON <- filter(df, treatment == "ON")
-dataOFF <- filter(df, treatment == "OFF")
-#shuffle row indices
-set.seed(531)
-rowsOFF <- sample(nrow(dataOFF))
-# reorder by random indices
-dataOFF <- dataOFF[rowsOFF, ]
-#choose split point 80% THROUGH THE DATA
-split <- round(nrow(dataOFF) * 0.80)
-# select 80% of randomly shuffled off data
-dataOFF <- dataOFF[1:split, ]
-# now shuffle on data
-set.seed(531)
-rowsON <- sample(nrow(dataON))
-# reorder 
-dataON <- dataON[rowsON, ]
-#select same number of off as on 
-dataON <- dataON[1:split, ]
-# bind theseback together
-predictData <- rbind(dataON, dataOFF)
-# okay dropped my sample size in HALF ask steve about this
-head(predictData)
+# #split data to on and off
+# dataON <- filter(df, treatment == "ON")
+# dataOFF <- filter(df, treatment == "OFF")
+# #shuffle row indices
+# set.seed(531)
+# rowsOFF <- sample(nrow(dataOFF))
+# # reorder by random indices
+# dataOFF <- dataOFF[rowsOFF, ]
+# #choose split point 80% THROUGH THE DATA
+# split <- round(nrow(dataOFF) * 0.80)
+# # select 80% of randomly shuffled off data
+# dataOFF <- dataOFF[1:split, ]
+# # now shuffle on data
+# set.seed(531)
+# rowsON <- sample(nrow(dataON))
+# # reorder 
+# dataON <- dataON[rowsON, ]
+# #select same number of off as on 
+# dataON <- dataON[1:split, ]
+# # bind theseback together
+# predictData <- rbind(dataON, dataOFF)
+# # okay dropped my sample size in HALF ask steve about this
+# head(predictData)
 
 # create the distance matrix for predictions
 dists <- makeDists(cbind(predictData$x.pos, predictData$y.pos),
@@ -377,6 +377,8 @@ dists <- makeDists(cbind(predictData$x.pos, predictData$y.pos),
 predslink <- predict(baseModel, predictData, type = "link")
 # reversing the logit-link to convert predictions back to the response scale
 preds <- plogis(predslink)
+length(preds)
+df$predictions <- preds
 
 ### Step 19 visualising predictions
 # plotting the predictions for before and after impact
@@ -394,46 +396,59 @@ quilt.plot(predictData$x.pos[predictData$treatment=="ON"],
            asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.3), main = "TAST ON")
 
 # add legend label?
+str(preds[predictData$treatment=="ON"])
 
 ## Step 20: bootstrap CI
 # do the bootstrap # do this at 999 when you get the chance
-do.bootstrap.cress(df, predictData, ddf.obj=NULL, baseModel, splineParams,
-                   dists, B=999)
+do.bootstrap.cress(df, df, ddf.obj=NULL, baseModel, splineParams,
+                   dists, B=20)
 
 # read in bootstrap predictions
 load("predictionboot.RData")
+str(bootPreds)
+
+bootPreds$id <- as.factor(df$id)
+
+
+df$id <- as.factor(df$id)
+
+df$group_by(levels(df$id))
 # make percentile confidence intervals
-cis <- makeBootCIs(bootPreds)
 
-cisoff <- cis[1:2820,]
 
-cison <- cis[2821:5640,]
+
+
+cison <- makeBootCIs(bootPreds[predictData$treatment=="ON",])
+
+cisoff <- makeBootCIs(bootPreds[predictData$treatment=="OFF",])
 
 ## Step 21: visualising boot CI
-
-par(mfrow=c(2,2), mar=c(3,3,3,5))
+par(mfrow=c(2,2), mar=c(3,4,3,3)) 
 
 #low OFFs
 quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
            predictData$y.pos[predictData$treatment=="OFF"],
            cisoff[,1], asp=1, nrow=dims[1], ncol=dims[2], 
-           zlim=c(0, maxlim = 0.3), main = " Lower CI  - TAST OFF", add.legend = F)
+           zlim=c(0, maxlim = 0.4), main = " Lower CI  - TAST OFF", add.legend = F)
+par(mar=c(3,1,3,6))
 # up OFF
 quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
            predictData$y.pos[predictData$treatment=="OFF"], cisoff[,2],
-           asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.3), main = "Upper CI - TAST OFF")
-
+           asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.4), 
+           main = "Upper CI - TAST OFF")
+par(mar=c(3,4,3,3))
 #low ONs
 quilt.plot(predictData$x.pos[predictData$treatment=="ON"],
            predictData$y.pos[predictData$treatment=="ON"],
            cison[,1], asp=1, nrow=dims[1], ncol=dims[2], 
-           zlim=c(0, maxlim = 0.3), main = " Lower CI  - TAST ON", add.legend = F)
+           zlim=c(0, maxlim = 0.4), main = " Lower CI  - TAST ON", add.legend = F)
+par(mar=c(3,1,3,6))
 # up ON
 quilt.plot(predictData$x.pos[predictData$treatment=="ON"],
            predictData$y.pos[predictData$treatment=="ON"], cison[,2],
-           asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.3), main = "Upper CI - TAST ON")
+           asp=1,nrow=dims[1], ncol=dims[2], zlim=c(0, maxlim = 0.4), 
+           main = "Upper CI - TAST ON")
 
-## something funky goin onhere
 
 
 ## Step 22: Identifying Differences 
@@ -441,42 +456,69 @@ differences <- getDifferences(beforePreds = bootPreds[predictData$treatment=="OF
                               afterPreds = bootPreds[predictData$treatment=="ON", ])
 
 
+bootPreds$id <- as.factor(df$id)
+
+# get average prediction for each grid id  for on 
+boot_off <- bootPreds[predictData$treatment=="OFF",]
+
+# group by grid id
+
+# take mean of each column of each group
+
+# store in a new df with single row for each grid id and row for each boot predict
+
+
+# get average prediction for each id for off 
+bootPreds[predictData$treatment=="ON", ]
+
+
+
+
+for(grid in 1:length(df$id)){
+
+}
+
+
 
 # Step 23: Visualising differences
 # The median for each after - before difference
-mediandiff <- differences$mediandiff
+medianiff <- differences$meandiff
 
 # The marker for each after - before difference:
 # positive ('1') and negative ('-1') significant differences
 marker <- differences$significanceMarker
 
 #plot positive differences
-par(mfrow = c(1, 2))
+par(mfrow = c(1, 1), mar = c(3, 6, 3, 3))
 quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
            predictData$y.pos[predictData$treatment=="OFF"],
-           mediandiff, asp = 1, nrow = 7, ncol = 9, add.legend = F)
+           mediandiff, asp = 1, nrow = 7, ncol = 9, add.legend = T)
 # add + depending on significance of cells. Just
 # requires one significance out of all to be allocated
 points(predictData$x.pos[predictData$treatment=="OFF"][marker==1],
        predictData$y.pos[predictData$treatment=="OFF"][marker==1], pch="+",
-       col="darkgrey", cex=.5)
+       col="black", cex=1)
 # location of observer
 points(0,0,pch= "*", col="green", cex=3)
-
-#plot negative differences
-quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
-           predictData$y.pos[predictData$treatment=="OFF"],
-           mediandiff, asp = 1, nrow = 7, ncol = 9)
+# 
+# #plot negative differences
+# quilt.plot(predictData$x.pos[predictData$treatment=="OFF"],
+#            predictData$y.pos[predictData$treatment=="OFF"],
+#            mediandiff, asp = 1, nrow = 7, ncol = 9)
 # add - depending on significance of cells. Just
 # requires one significance out of all to be allocated
 points(predictData$x.pos[predictData$treatment=="OFF"][marker==(-1)],
-       predictData$y.pos[predictData$treatment=="OFF"][marker==(-1)], col="darkgrey",
-       cex=.5)
+       predictData$y.pos[predictData$treatment=="OFF"][marker==(-1)], col="white",
+       cex=1)
+
+points(predictData$x.pos[predictData$treatment=="OFF"][marker==(0)],
+       predictData$y.pos[predictData$treatment=="OFF"][marker==(0)], col="black",
+       cex=.5) 
 # location of observer
 points(0,0,pch= "*", col="green", cex=3)
 
 ## interesting -- how can some squares have both significant increases and significant decreases... 
-
+## see if felix can help>
 
 
 
