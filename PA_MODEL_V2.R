@@ -321,7 +321,7 @@ runDiagnostics(geeModel)
 ### Step 16: COVRATIO and PRESS Statistic --- This will take 276 minutes or 4.6 hours... run over night
 timeInfluenceCheck(geeModel, df$session_grid_block, dists, splineParams)
 # influence plots (covratio and press statistics)
-# influence <- runInfluence(geeModel, data$session_grid_block,  dists, splineParams)
+influence <- runInfluence(geeModel, df$session_grid_block,  dists, splineParams)
 
 ### Step 17: RAW residual plots
 resids <- fitted(geeModel) - df$pa
@@ -337,7 +337,7 @@ quilt.plot(df$x.pos[df$treatment == "ON"], df$y.pos[df$treatment == "ON"],
 ## Step 19: Influence plots
 timeInfluenceCheck(geeModel, df$block_as_session, dists, splineParams)
 # influence plots (covratio and press statistics) this will take 6hrs
-# influence <- runInfluence(bestModel2D, df$block_as_session, dists, splineParams)
+influence <- runInfluence(geeModel, df$block_as_session, dists, splineParams)
 
 ### Step 18: Predictions
 # loading the prediction grid data
