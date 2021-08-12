@@ -473,13 +473,6 @@ bootPreds[predictData$treatment=="ON", ]
 
 
 
-
-for(grid in 1:length(df$id)){
-
-}
-
-
-
 # Step 23: Visualising differences
 # The median for each after - before difference
 medianiff <- differences$meandiff
